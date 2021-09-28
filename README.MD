@@ -5,7 +5,7 @@
 git\
 Terraform v 1.0.0 or newer\
 Vagrant (for testing locally)\
-Ansible (install instapp python3 & python3-pip then run "python3 -m pip install --user ansible"\
+Ansible (install python3 & python3-pip then run "python3 -m pip install --user ansible"\
 GCP cloud account with permissions to create a project
 
 ## Prereqs for ansible:
