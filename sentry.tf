@@ -1,21 +1,29 @@
 resource "google_compute_instance" "terraform-gcp-sentry-ubuntu" {
-    name		= "sentry-vm"
-    machine_type	= "n1-standard-2"
-    zone		= "europe-west2-c"
+    name		= "${var.sentry_name}"
+    hostname		= "${var.sentry_hostname}"
+    machine_type	= "${var.sentry_machine_type}"
+    zone		= "${var.zone}"
+    tags                = ["web"]
 
     boot_disk {
         initialize_params {
-            image = "ubuntu-os-cloud/ubuntu-2004-lts"
+            image = "${var.sentry_image}"
         }
     }
   
 
     network_interface {
-        network = "default"
+        network = "${var.network_interface}"
         access_config {
             nat_ip = "${google_compute_address.static.address}"
       }
     }
+    
+    service_account {
+        scopes = ["storage-rw"]
+    }
+
+    allow_stopping_for_update = false
 
 // point to the ssh keys var defined in tfvars, this pubkey will be deployed to the instance so ansible will work
 
@@ -25,17 +33,18 @@ resource "google_compute_instance" "terraform-gcp-sentry-ubuntu" {
     
    
     provisioner "remote-exec" {
-    inline = ["sudo apt-get update; sudo apt-get -y install python"]
+    inline = ["sudo apt-get update; sudo apt-get -y install python3"]
 
     connection {
-      type        = "ssh"
-      user        = "${var.ssh_username}"
-      private_key = "${var.ssh_pri_key_path}"
+      type        	= "ssh"
+      host		= self.network_interface[0].access_config[0].nat_ip
+      user        	= "${var.ssh_username}"
+      private_key 	= "${file(var.ssh_pri_key_path)}"
     }
     }
 
     provisioner "local-exec" {
-      command = "ansible-playbook -u ubuntu -i '${self.public_ip},' --private-key ${var.ssh_pri_key_path} sentry-playbook.yml"
+      command = "ansible-playbook -u ${var.ssh_username} -i '${self.network_interface.0.access_config.0.nat_ip},' --private-key ${var.ssh_pri_key_path} ${var.ansible_playbook_name}"
     }
 
 
@@ -58,7 +67,7 @@ resource "google_compute_firewall" "default" {
 
  allow {
    protocol = "tcp"
-   ports    = ["443"]
+   ports    = ["443", "22"]
  }
 
 // change source range to your IP to restrict access
