@@ -17,7 +17,7 @@
          update_cache: true
 
      - name: NGINX | Create self-signed cert
-       command: openssl req -x509 -nodes -subj '/CN={{ ansible_hostname }}' -days 365 -newkey rsa:4096 -sha256 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt
+       command: openssl req -x509 -nodes -subj '/CN={{ ansible_fqdn }}' -days 365 -newkey rsa:4096 -sha256 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt
        args:
          creates: /etc/ssl/certs/nginx-selfsigned.crt
 
